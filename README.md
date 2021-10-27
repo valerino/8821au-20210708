@@ -1,3 +1,7 @@
+## !!!! if you're here, chances are you need to compile the following for MiSTer FPGA !!!
+
+[compile on MiSTer, read here first](./README_mister.md)
+
 ##### [Click for USB WiFi Adapter Information for Linux](https://github.com/morrownr/USB-WiFi)
 
 -----

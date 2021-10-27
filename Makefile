@@ -7,6 +7,11 @@ EXTRA_CFLAGS += -O1
 #EXTRA_CFLAGS += -pedantic
 #EXTRA_CFLAGS += -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes
 
+ifdef MISTER
+# disable stack protection on mister
+EXTRA_CFLAGS += -fno-stack-protector
+endif
+
 EXTRA_CFLAGS += -Wno-unused-variable
 #EXTRA_CFLAGS += -Wno-unused-value
 #EXTRA_CFLAGS += -Wno-unused-label
@@ -99,13 +104,20 @@ EXTRA_CFLAGS += -DCONFIG_RTW_ANDROID=$(CONFIG_RTW_ANDROID)
 endif
 
 ########################## Debug ###########################
+ifndef MISTER
+# disable on mister
 CONFIG_RTW_DEBUG = y
+endif
+
 # default log level is _DRV_INFO_ = 4,
 # please refer to "How_to_set_driver_debug_log_level.doc" to set the available level.
 CONFIG_RTW_LOG_LEVEL = 0
 
 # enable /proc/net/rtlxxxx/ debug interfaces
+ifndef MISTER
+# disable on mister
 CONFIG_PROC_DEBUG = y
+endif
 
 ######################## Wake On Lan ##########################
 CONFIG_WOWLAN = n
