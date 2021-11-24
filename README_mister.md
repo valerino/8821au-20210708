@@ -2,13 +2,15 @@
 
 > this has been tested on linux mint, adapted from [the official mister wiki](https://github.com/MiSTer-devel/Main_MiSTer/wiki/MISTER-CUSTOM-WIFI-DRIVER-COMPILATION-GUIDE).
 
-1. install arm toolchain
+0. plug your wifi dongle into MiSTer !
+
+2. install arm toolchain on the host.
 
 ~~~bash
 apt install gcc-arm-linux-gnueabihf build-essential
 ~~~
 
-2. clone this and mister kernel repo and this repo in a work dir
+2. on the host, clone MiSTer kernel repo and driver repo in a work dir
 
 ~~~bash
 mkdir tmpwrk && cd tmpwrk
@@ -18,21 +20,21 @@ rm -rf Linux_Kernel_MiSTer/.git
 rm -rf 8821au-22010708/.git
 ~~~
 
-3. compile mister kernel
+3. on the host, compile mister kernel
 
 ~~~bash
 cd Linux-Kernel_MiSTer
 make ARCH=arm mrproper && make ARCH=arm MiSTer_defconfig && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- EXTRAVERSION=-MiSTer modules_prepare
 ~~~
 
-4. compile driver
+4. on the host, compile driver
 
 ~~~bash
 cd .. && cd 8821au-20210708
 MISTER=1 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- KSRC=../Linux-Kernel_MiSTer modules
 ~~~
 
-if everything went well, you should find the compiled driver in your current directory.
+if everything went well, you should find the compiled driver in your current directory on the host.
 
 ~~~bash
 ➜ ~/Downloads/tmpdriver/8821au-20210708 (main) ✗ ls -l 
@@ -40,30 +42,51 @@ total 4648
 -rw-rw-r-- 1 valerino valerino 2149464 ott 27 14:24 8821au.ko
 ~~~
 
-5. now transfer this to MiSTer in /media/fat/8821au.ko and **unplug the wifi dongle and reboot MiSTer**.
-
-6. **from now on, you proceed with a keyboard, logging into MiSTer as root with F9**.
-
-7. copy file to /lib/modules/<kernel-version>, i.e. /lib/modules/5.14.5-MiSTer
+5. now transfer the compiled driver to MiSTer.
 
 ~~~bash
-cp /media/fat/8821au.ko /lib/modules/5.14.5-MiSTer/8821au.ko
+scp ./8821au.ko root@mister.ip:/media/fat
 ~~~
 
-7. install module
+7. ssh into MiSTer, and copy driver to /lib/modules/<kernel-version>, i.e. /lib/modules/5.15.1-MiSTer
+
+~~~bash
+cp /media/fat/8821au.ko /lib/modules/5.15.1-MiSTer/8821au.ko
+~~~
+
+7. on MiSTer, install module.
 
 ~~~bash
 depmod -a
 modprobe 8821au
+
+# the following error is normal!
+/lib/modules/5.15.1-MiSTer# modprobe 8821au
+modprobe: ERROR: could not insert '8821au': Device or resource busy
 ~~~
 
-you should get no error.
-
-8. copy over the default module, making sure to delete the old.
+8. on MiSTer, copy over the default module, making sure to delete the old.
 
 ~~~bash
-rm /lib/modules/5.14.5-MiSTer/kernel/drivers/net/wireless/realtek/rtl8821au/*
-mv /lib/modules/5.14.5-MiSTer/8821au.ko /lib/modules/5.14.5-MiSTer/kernel/drivers/net/wireless/realtek/rtl8821au/8821au.ko
+rm /lib/modules/5.15.1-MiSTer/kernel/drivers/net/wireless/realtek/rtl8821au/*
+mv /lib/modules/5.15.1-MiSTer/8821au.ko /lib/modules/5.15.1-MiSTer/kernel/drivers/net/wireless/realtek/rtl8821au/8821au.ko
 ~~~
 
-9. assuming you have a working /media/linux/wpa_supplicant.conf, reboot replug the wifi dongle and you should be done. that's it.
+9. assuming you have a working /media/linux/wpa_supplicant.conf on MiSTer, reboot and you should be done. that's it :)
+  
+~~~bash
+# example wpa_supplicant.conf
+ctrl_interface=/run/wpa_supplicant
+update_config=1
+country=IT
+
+network={
+	ssid="my_SSID"
+	psk="my_pwd"
+}
+
+network={
+	ssid="another_SSID"
+	psk="another_pwd"
+}
+~~~
